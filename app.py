@@ -84,13 +84,18 @@ else:
 # Path to the trained model used for shrimp disease detection
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "CrustaScope_model.h5")
-model = load_model(MODEL_PATH)
+model = None
 print("[DEBUG] Loading model from:", MODEL_PATH)
 
 if not os.path.exists(MODEL_PATH):
     raise Exception("MODEL FILE NOT FOUND")
-print("[INFO] H5 Model loaded successfully.")
-
+def get_model():
+    global model
+    if model is None:
+        print("[INFO] Loading model...")
+        model = load_model(MODEL_PATH)
+        print("[INFO] Model loaded successfully")
+    return model
 # Perform ML inference on a camera frame and return prediction confidence
 def predict_image(img_bgr: np.ndarray) -> float:
     """
@@ -102,7 +107,8 @@ def predict_image(img_bgr: np.ndarray) -> float:
     resized = np.expand_dims(resized, axis=0)
 
     # Predict using Keras model
-    output = model.predict(resized, verbose=0)
+    model = get_model()
+	output = model.predict(resized, verbose=0)
 
     # Handle different output shapes safely
     if isinstance(output, list):
