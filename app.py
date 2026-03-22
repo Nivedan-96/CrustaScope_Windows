@@ -25,6 +25,10 @@ from bson.binary import Binary
 
 # import tflite_runtime.interpreter as tflite
 from tensorflow.keras.models import load_model
+
+print("[INFO] App starting...")
+
+
 # Initialize the FastAPI application instance
 app = FastAPI()
 
@@ -78,8 +82,13 @@ else:
     print("[WARN] MONGODB_URI not set. DB features disabled.")
 
 # Path to the trained model used for shrimp disease detection
-MODEL_PATH = "CrustaScope_model.h5"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "CrustaScope_model.h5")
 model = load_model(MODEL_PATH)
+print("[DEBUG] Loading model from:", MODEL_PATH)
+
+if not os.path.exists(MODEL_PATH):
+    raise Exception("MODEL FILE NOT FOUND")
 print("[INFO] H5 Model loaded successfully.")
 
 # Perform ML inference on a camera frame and return prediction confidence
