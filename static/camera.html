@@ -92,6 +92,30 @@
     <main class="ml-64 flex-1 p-6 md:p-8 overflow-y-auto w-full">
       <div class="max-w-[1400px] mx-auto">
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6 flex items-center justify-between">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+
+            <h2 class="text-xl font-bold mb-4">Upload Shrimp Image</h2>
+          
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition">
+          
+              <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="uploadImage()">
+          
+              <button onclick="document.getElementById('imageInput').click()"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md shadow">
+                Upload Image
+              </button>
+          
+              <p class="text-sm text-gray-500 mt-3">Supports JPG, PNG, WEBP and more</p>
+          
+            </div>
+          
+            <div id="preview-container" class="mt-6 hidden">
+              <img id="preview" class="max-h-64 mx-auto rounded shadow" />
+            </div>
+          
+            <div id="result" class="mt-6 text-center text-lg font-semibold"></div>
+          
+          </div>
           <div>
             <h1 class="text-2xl font-bold text-gray-900 mb-1">Camera Live Feed</h1>
             <p class="text-gray-500 text-sm">Monitor your security cameras in real-time</p>
@@ -194,56 +218,37 @@
       }
     }
 
-    function loadCameras() {
-      fetch('/cameras')
-        .then(r => r.json())
-        .then(data => {
-          camerasList = data.cameras;
-          if (camerasList && camerasList.length > 0) {
-            selectedCameraIndex = camerasList[0];
-            renderCameraList();
-            startMonitoring();
-          } else {
-            renderCameraList();
-          }
-        })
-        .catch(err => console.error("Error loading cameras", err));
-    }
+async function uploadImage() {
+  const fileInput = document.getElementById('imageInput');
+  const file = fileInput.files[0];
 
-    function selectCamera(idx) {
-      if (selectedCameraIndex !== idx) {
-        selectedCameraIndex = idx;
-        renderCameraList();
-        stopMonitoring().then(() => startMonitoring());
-      }
-    }
+  if (!file) return;
 
-    function startMonitoring() {
-      fetch('/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ camera_index: selectedCameraIndex })
-      })
-        .then(r => r.json())
-        .then(res => {
-          isMonitoring = true;
-          document.getElementById('stopped-overlay').classList.add('hidden');
-          document.getElementById('video-stream').classList.remove('hidden');
-          document.getElementById('video-stream').src = '/video_feed?' + new Date().getTime();
-        });
-    }
+  // Preview
+  const preview = document.getElementById('preview');
+  preview.src = URL.createObjectURL(file);
+  document.getElementById('preview-container').classList.remove('hidden');
 
-    function stopMonitoring() {
-      return fetch('/stop', { method: 'POST' })
-        .then(() => {
-          isMonitoring = false;
-          document.getElementById('video-stream').src = '';
-          document.getElementById('video-stream').classList.add('hidden');
-          document.getElementById('stopped-overlay').classList.remove('hidden');
-        });
-    }
+  const formData = new FormData();
+  formData.append("file", file);
 
-    loadCameras();
+  document.getElementById("result").innerText = "Processing...";
+
+  try {
+    const res = await fetch("/upload_test", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+
+    document.getElementById("result").innerText =
+      `${data.label} (${(data.confidence * 100).toFixed(2)}%)`;
+
+  } catch (err) {
+    document.getElementById("result").innerText = "Error processing image";
+  }
+}
   </script>
 </body>
 
