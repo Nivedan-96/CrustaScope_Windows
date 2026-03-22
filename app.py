@@ -111,7 +111,7 @@ def predict_image(img_bgr: np.ndarray) -> float:
     try:
         img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
         resized = cv2.resize(img_rgb, (224, 224))
-        resized = resized.astype(np.float32) / 255.0
+        resized = (resized.astype(np.float32) - 127.5) / 127.5
         resized = np.expand_dims(resized, axis=0)
 
         model = get_model()
